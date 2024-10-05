@@ -210,12 +210,13 @@
     libimobiledevice # to connect with ios
 
     # terminal applications
+    neovim
     vim
     btop
     bat
     
     # gnome applications
-    gnome-tweaks
+    # gnome-tweaks
     resources
     mission-center
 
@@ -223,8 +224,6 @@
     obsidian
     vesktop
     spotify
-    vscode
-    zed-editor
     (chromium.override {
       commandLineArgs = [
         "--enable-features=VaapiVideoDecodeLinuxGL"
@@ -235,9 +234,13 @@
     })
 
     # coding
-    git
+    gcc
     python3
+    git
     kitty
+    vscode
+    zed-editor
+
   ];
   
   # enviromental variable that chooses the vulkan driver.
