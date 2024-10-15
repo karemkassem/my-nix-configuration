@@ -31,14 +31,13 @@
       libvdpau-va-gl
       # vaapi-intel-hybrid
       # libva-vdpau-driver
-    ];
+    ]; 
   };
-  environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
 
 
-  services.xserver.videoDrivers = [ "i915" "nvidia" ]; # replace i915 with intel, if found some problems
-  boot.blacklistedKernelModules = [ "nouveau" ];
-
+  # environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
+  #  boot.blacklistedKernelModules = [ "nouveau" ];
+  
 
   # nvidia drivers
   hardware.nvidia = {
@@ -48,7 +47,7 @@
 
     # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
     # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead 
+    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
     # of just the bare essentials.
     powerManagement.enable = false;
 
@@ -58,12 +57,12 @@
 
     # Use the NVidia open source kernel module (not to be confused with the
     # independent third-party "nouveau" open source driver).
-    # Support is limited to the Turing and later architectures. Full list of 
-    # supported GPUs is at: 
-    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus 
+    # Support is limited to the Turing and later architectures. Full list of
+    # supported GPUs is at:
+    # https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus
     # Only available from driver 515.43.04+
     # Currently alpha-quality/buggy, so false is currently the recommended setting.
-    open = true; ## change this to false if I finde buggy behaviour from the drivers
+    open = false; ## change this to false if I finde buggy behaviour from the drivers
 
     # Enable the Nvidia settings menu,
 	  # accessible via `nvidia-settings`.
@@ -78,12 +77,12 @@
     # choose one of the two options only
     # thers is another option c, but it's experimental, go to the wiki.
 		# Option A : offloading
-    offload = {
-			enable = true;
-			enableOffloadCmd = true;
-		};
+    # offload = {
+		# 	enable = true;
+		# 	enableOffloadCmd = true;
+		# };
     # Option B : sync
-    # sync.enable = true;
+    sync.enable = true;
 
 		# Make sure to use the correct Bus ID values for your system!
 		intelBusId = "PCI:0:2:0";
@@ -94,8 +93,9 @@
 
   # end of nvidia drivers
 
-  # enable zsh
+  # enable and default zsh
   programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
 
   # sets the kernel to the latest kernel available 
   # comment it to use the "lts" version
@@ -129,17 +129,51 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
+  programs.hyprland.enable = true; # enable Hyprland
+
+  services = {
+    xserver = {
+      enable = true;
+      videoDrivers = [ "i915" "nouveau"]; # replace i915 with nvidia, for nvidia #"nvidia" "nvidia_drm" "nvidia_modeset" 
+    };
+    desktopManager.plasma6.enable = true;
+    displayManager = {
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+      };
+    };
+  };
+  # boot.kernelParams = [ "module_blacklist=i915" ]; # blacklist i915 for nvidia ## don't use this unlees ablsolutely necessary
+
+  ## disable nvidia card completely
+  # boot.extraModprobeConfig = ''
+  #   blacklist nouveau
+  #   options nouveau modeset=0
+  # '';   
+  # services.udev.extraRules = ''
+  #   # Remove NVIDIA USB xHCI Host Controller devices, if present
+  #   ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{power/control}="auto", ATTR{remove}="1"
+  #   # Remove NVIDIA USB Type-C UCSI devices, if present
+  #   ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{power/control}="auto", ATTR{remove}="1"
+  #   # Remove NVIDIA Audio devices, if present
+  #   ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto", ATTR{remove}="1"
+  #   # Remove NVIDIA VGA/3D controller devices
+  #   ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"
+  # '';
+  # boot.blacklistedKernelModules = [ "nouveau" "nvidia" "nvidia_drm" "nvidia_modeset" ];
+
+  ## spcial boot configuration for nvidia drivers, ( can add more options and more configurations )
+  specialisation = {
+    nvidia.configuration = {
+      system.nixos.tags = [ "nvidia" ];
+      services.xserver.videoDrivers = [ "i915" "nvidia" "nvidia_drm" "nvidia_modeset" ];
+    };
+  };
 
   # Enable the GNOME Desktop Environment.
   # services.xserver.displayManager.gdm.enable = true;
   # services.xserver.desktopManager.gnome.enable = true;
-
-  # thi is to enable kde plasma, disable gnome for it to work
-  services.displayManager.sddm.enable = true;
-  services.displayManager.sddm.wayland.enable = true;
-  services.desktopManager.plasma6.enable = true;
 
   # Using the following example configuration, QT applications will have a look similar to the GNOME desktop, using a dark theme. 
   # qt = {
@@ -167,7 +201,7 @@
     alsa.support32Bit = true;
     pulse.enable = true;
     # If you want to use JACK applications, uncomment this
-    jack.enable = true;
+    jack.enable = false;
 
     # use the example session manager (no others are packaged yet so this is enabled by default,
     # no need to redefine it in your config for now)
@@ -195,32 +229,57 @@
   nixpkgs.config.allowUnfree = true;
 
   # to allow connections with ios
-  services.usbmuxd.enable = true;
+  # services.usbmuxd.enable = true;
+
+  # # xdg portal configuration
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-wlr
+      xdg-desktop-portal-kde
+      xdg-desktop-portal-hyprland
+    ];
+    wlr = {
+      enable = true;
+    };
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     
-    # system packages 
+    ## system packages 
     vulkan-loader
     vulkan-tools
     vulkan-validation-layers
     mesa-demos
     pwvucontrol
-    libimobiledevice # to connect with ios
+    # toybox # if I find no glitches after commenting it delete it completely
+    # libimobiledevice # to connect with ios
+    ## packages for hyprland
+    lxqt.lxqt-policykit
+    rofi-wayland
+    dunst
+    libnotify # for dunst
+    networkmanagerapplet
+    hyprpaper
+    waybar
 
-    # terminal applications
+    ## terminal applications
+    kitty
+    alacritty
     neovim
     vim
     btop
     bat
+    ranger
     
-    # gnome applications
+    ## gnome applications
     # gnome-tweaks
     resources
     mission-center
 
-    # applications 
+    ## applications 
     obsidian
     vesktop
     spotify
@@ -232,12 +291,12 @@
         # "--ozone-platform-hint=auto"
       ];
     })
+    zoom-us
 
-    # coding
+    ## coding
     gcc
     python3
     git
-    kitty
     vscode
     zed-editor
 
@@ -246,11 +305,11 @@
   # enviromental variable that chooses the vulkan driver.
   # uncomment to use the intel drivers, if needed replace "intel" with "nvidia" to use nvidia drivers 
   # comment this to use nvidia drivers
-  # environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json;
+  environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json;
   ## Note: use DRI_PRIME=1 <application> if you want to run vulkan applications on nvidia
 
   # for electron wayland
-  # environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   # enable flatpak
   services.flatpak.enable = true;
