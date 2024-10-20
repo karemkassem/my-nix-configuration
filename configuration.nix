@@ -53,7 +53,7 @@
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
-    powerManagement.finegrained = false; ## try this later
+    powerManagement.finegrained = false; 
 
     # Use the NVidia open source kernel module (not to be confused with the
     # independent third-party "nouveau" open source driver).
@@ -167,8 +167,9 @@
   specialisation = {
     nvidia.configuration = {
       system.nixos.tags = [ "nvidia" ];
-      services.xserver.videoDrivers = [ "i915" "nvidia" "nvidia_drm" "nvidia_modeset" ];
+      services.xserver.videoDrivers = [ "i915" "nvidia" "nvidia_drm" "nvidia_modeset" ];  
     };
+
   };
 
   # Enable the GNOME Desktop Environment.
@@ -253,9 +254,8 @@
     vulkan-tools
     vulkan-validation-layers
     mesa-demos
-    pwvucontrol
-    # toybox # if I find no glitches after commenting it delete it completely
     # libimobiledevice # to connect with ios
+
     ## packages for hyprland
     lxqt.lxqt-policykit
     rofi-wayland
@@ -264,6 +264,7 @@
     networkmanagerapplet
     hyprpaper
     waybar
+    pwvucontrol
 
     ## terminal applications
     kitty
@@ -283,6 +284,10 @@
     obsidian
     vesktop
     spotify
+    zoom-us
+    kdePackages.filelight
+
+    ## chromium
     (chromium.override {
       commandLineArgs = [
         "--enable-features=VaapiVideoDecodeLinuxGL"
@@ -291,7 +296,6 @@
         # "--ozone-platform-hint=auto"
       ];
     })
-    zoom-us
 
     ## coding
     gcc
@@ -301,6 +305,14 @@
     zed-editor
 
   ];
+
+  # Enable and download steam (NOTE : make sure to change the vulkan driver to nvidia)
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+    localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+  };
   
   # enviromental variable that chooses the vulkan driver.
   # uncomment to use the intel drivers, if needed replace "intel" with "nvidia" to use nvidia drivers 
@@ -308,7 +320,7 @@
   environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json;
   ## Note: use DRI_PRIME=1 <application> if you want to run vulkan applications on nvidia
 
-  # for electron wayland
+  # for electron wayland 
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   # enable flatpak
