@@ -129,7 +129,8 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  programs.hyprland.enable = true; # enable Hyprland
+  ## enable Hyprland
+  # programs.hyprland.enable = true; 
 
   services = {
     xserver = {
@@ -235,14 +236,9 @@
   # # xdg portal configuration
   xdg.portal = {
     enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-wlr
-      xdg-desktop-portal-kde
-      xdg-desktop-portal-hyprland
+    extraPortals = with pkgs; [ # highly likely that all this is unnecissary in kde plasma
+      # xdg-desktop-portal-hyprland
     ];
-    wlr = {
-      enable = true;
-    };
   };
 
   # List packages installed in system profile. To search, run:
@@ -257,14 +253,14 @@
     # libimobiledevice # to connect with ios
 
     ## packages for hyprland
-    lxqt.lxqt-policykit
-    rofi-wayland
-    dunst
-    libnotify # for dunst
-    networkmanagerapplet
-    hyprpaper
-    waybar
-    pwvucontrol
+    # lxqt.lxqt-policykit
+    # rofi-wayland
+    # dunst
+    # libnotify # for dunst
+    # networkmanagerapplet
+    # hyprpaper
+    # waybar
+    # pwvucontrol
 
     ## terminal applications
     kitty
@@ -274,6 +270,7 @@
     btop
     bat
     ranger
+    neofetch
     
     ## gnome applications
     # gnome-tweaks
@@ -286,6 +283,7 @@
     spotify
     zoom-us
     kdePackages.filelight
+    kdePackages.kclock
 
     ## chromium
     (chromium.override {
@@ -300,11 +298,25 @@
     ## coding
     gcc
     python3
+    virtualenv
     git
     vscode
-    zed-editor
+    jetbrains.pycharm-professional
 
   ];
+
+  # Enable the KDE Connect service
+  programs.kdeconnect.enable = true;
+  # Open ports in the firewall for KDE Connect
+  networking.firewall = {
+    enable = true;
+    allowedTCPPortRanges = [ 
+      { from = 1714; to = 1764; } # KDE Connect
+    ];  
+    allowedUDPPortRanges = [ 
+      { from = 1714; to = 1764; } # KDE Connect
+    ];  
+  }; 
 
   # Enable and download steam (NOTE : make sure to change the vulkan driver to nvidia)
   programs.steam = {
