@@ -271,7 +271,6 @@
     ## terminal applications
     kitty
     alacritty
-    neovim
     vim
     btop
     bat
@@ -315,7 +314,257 @@
     vscode
     jetbrains.pycharm-professional
 
+    ## neovim
+
+    # Language servers
+    nodePackages.typescript-language-server
+    nodePackages.vscode-langservers-extracted
+    pyright
+    rust-analyzer
+    gopls
+    ccls
+    jdt-language-server
+
+    # Tools
+    ripgrep
+    fd
+
   ];
+
+  # NeoVim
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
+
+    configure = {
+      packages.myVimPackage = with pkgs.vimPlugins; {
+        start = [
+          # File explorer
+          nvim-tree-lua
+          
+          # Fuzzy finder
+          telescope-nvim
+          plenary-nvim
+          
+          # LSP Support
+          nvim-lspconfig
+          nvim-cmp
+          cmp-nvim-lsp
+          cmp-buffer
+          cmp-path
+          cmp-cmdline
+          luasnip
+          cmp_luasnip
+          
+          # Syntax highlighting
+          (nvim-treesitter.withPlugins (p: with p; [
+            python
+            javascript
+            typescript
+            rust
+            go
+            json
+            html
+            css
+            c
+            cpp
+            java
+          ]))
+          
+          # Git integration
+          gitsigns-nvim
+          
+          # Theme
+          tokyonight-nvim
+          
+          # Status line
+          lualine-nvim
+          
+          # Buffer line
+          bufferline-nvim
+          
+          # Auto pairs
+          nvim-autopairs
+          
+          # Comments
+          comment-nvim
+          
+          # Indent guides
+          indent-blankline-nvim-lua
+          
+          # Which key
+          which-key-nvim
+        ];
+      };
+
+      customRC = ''
+        lua << EOF
+        -- Set leader key to space
+        vim.g.mapleader = " "
+        vim.g.maplocalleader = " "
+
+        -- Basic settings
+        vim.opt.number = true
+        vim.opt.relativenumber = true
+        vim.opt.mouse = 'a'
+        vim.opt.ignorecase = true
+        vim.opt.smartcase = true
+        vim.opt.hlsearch = false
+        vim.opt.wrap = false
+        vim.opt.breakindent = true
+        vim.opt.tabstop = 2
+        vim.opt.shiftwidth = 2
+        vim.opt.expandtab = true
+        vim.opt.termguicolors = true
+
+        -- Theme
+        vim.cmd[[colorscheme tokyonight]]
+
+        -- Nvim Tree
+        require('nvim-tree').setup{}
+        vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>')
+
+        -- Telescope
+        local builtin = require('telescope.builtin')
+        vim.keymap.set('n', '<leader>ff', builtin.find_files)
+        vim.keymap.set('n', '<leader>fg', builtin.live_grep)
+        vim.keymap.set('n', '<leader>fb', builtin.buffers)
+        vim.keymap.set('n', '<leader>fh', builtin.help_tags)
+
+        -- LSP Configuration
+        local lspconfig = require('lspconfig')
+        local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+        -- Setup language servers
+        local servers = { 
+          'ts_ls',
+          'pyright',
+          'rust_analyzer',
+          'gopls',
+          'ccls',
+          'jdtls'
+        }
+        
+        for _, lsp in ipairs(servers) do
+          lspconfig[lsp].setup {
+            capabilities = capabilities,
+            on_attach = function(client, bufnr)
+              -- Enable completion triggered by <c-x><c-o>
+              vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+              -- Mappings
+              local bufopts = { noremap=true, silent=true, buffer=bufnr }
+              vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+              vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+              vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+              vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
+              vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
+              vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
+              vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
+              vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
+            end,
+          }
+        end
+
+        -- Completion setup
+        local cmp = require('cmp')
+        local luasnip = require('luasnip')
+
+        cmp.setup({
+          snippet = {
+            expand = function(args)
+              luasnip.lsp_expand(args.body)
+            end,
+          },
+          mapping = cmp.mapping.preset.insert({
+            ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+            ['<C-f>'] = cmp.mapping.scroll_docs(4),
+            ['<C-Space>'] = cmp.mapping.complete(),
+            ['<CR>'] = cmp.mapping.confirm({ select = true }),
+            ['<Tab>'] = cmp.mapping(function(fallback)
+              if cmp.visible() then
+                cmp.select_next_item()
+              elseif luasnip.expand_or_jumpable() then
+                luasnip.expand_or_jump()
+              else
+                fallback()
+              end
+            end, { 'i', 's' }),
+            ['<S-Tab>'] = cmp.mapping(function(fallback)
+              if cmp.visible() then
+                cmp.select_prev_item()
+              elseif luasnip.jumpable(-1) then
+                luasnip.jump(-1)
+              else
+                fallback()
+              end
+            end, { 'i', 's' }),
+          }),
+          sources = cmp.config.sources({
+            { name = 'nvim_lsp' },
+            { name = 'luasnip' },
+            { name = 'buffer' },
+            { name = 'path' },
+          })
+        })
+
+        -- Treesitter
+        require('nvim-treesitter.configs').setup({
+          highlight = { enable = true },
+          indent = { enable = true },
+        })
+
+        -- Status line
+        require('lualine').setup()
+
+        -- Buffer line
+        require('bufferline').setup()
+
+        -- Git signs
+        require('gitsigns').setup()
+
+        -- Auto pairs
+        require('nvim-autopairs').setup()
+
+        -- Comments
+        require('Comment').setup()
+
+        -- Indent guides (new version)
+        require('ibl').setup()
+
+        -- Which key
+        require('which-key').setup()
+        EOF
+      '';
+    };
+  };
+
+  # Font configuration
+  fonts = {
+    packages = with pkgs; [
+      (nerdfonts.override { fonts = [
+        "JetBrainsMono"
+        "FiraCode"
+        "Hack"
+        "DroidSansMono"
+      ]; })
+      dejavu_fonts
+      liberation_ttf
+      ubuntu_font_family
+    ];
+    
+    fontconfig = {
+      defaultFonts = {
+        monospace = [ "JetBrainsMono Nerd Font" "DejaVu Sans Mono" ];
+        sansSerif = [ "DejaVu Sans" ];
+        serif = [ "DejaVu Serif" ];
+      };
+    };
+    enableDefaultPackages = true;
+  };
+
 
   # Enable the KDE Connect service
   programs.kdeconnect.enable = true;
