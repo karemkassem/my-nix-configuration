@@ -33,9 +33,8 @@
       # libva-vdpau-driver
     ]; 
   };
-
-
   # environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
+
   #  boot.blacklistedKernelModules = [ "nouveau" ];
   
 
@@ -130,7 +129,7 @@
   };
 
   ## enable Hyprland
-  # programs.hyprland.enable = true; 
+  programs.hyprland.enable = true; 
 
   services = {
     xserver = {
@@ -190,8 +189,13 @@
     variant = "";
   };
 
-  # Enable CUPS to print documents.
-  services.printing.enable = false;
+  # # Enable CUPS to print documents.
+  # services.printing.enable = true;
+  # services.avahi = {
+  #   enable = true;
+  #   nssmdns4 = true;
+  #   openFirewall = true;
+  # };
 
   # Enable sound with pipewire.
   hardware.pulseaudio.enable = false; # switch to it if a flatpak app is lagging
@@ -237,7 +241,7 @@
   xdg.portal = {
     enable = true;
     extraPortals = with pkgs; [ # highly likely that all this is unnecissary in kde plasma
-      # xdg-desktop-portal-hyprland
+      xdg-desktop-portal-hyprland
     ];
   };
 
@@ -253,14 +257,16 @@
     # libimobiledevice # to connect with ios
 
     ## packages for hyprland
-    # lxqt.lxqt-policykit
-    # rofi-wayland
-    # dunst
-    # libnotify # for dunst
-    # networkmanagerapplet
-    # hyprpaper
-    # waybar
-    # pwvucontrol
+    lxqt.lxqt-policykit
+    rofi-wayland
+    dunst
+    libnotify # for dunst
+    networkmanagerapplet
+    swww
+    waybar
+    pwvucontrol
+    cliphist
+    wl-clipboard
 
     ## terminal applications
     kitty
@@ -285,13 +291,19 @@
     kdePackages.filelight
     kdePackages.kclock
 
-    ## chromium
+    ## chromium browsers
     (chromium.override {
       commandLineArgs = [
         "--enable-features=VaapiVideoDecodeLinuxGL"
-        # "--ignore-gpu-blocklist"
-        # "--enable-zero-copy"
-        # "--ozone-platform-hint=auto"
+        "--ignore-gpu-blocklist"
+        "--enable-zero-copy"
+      ];
+    })
+    (brave.override {
+      commandLineArgs = [
+        "--enable-features=VaapiVideoDecodeLinuxGL"
+        "--ignore-gpu-blocklist"
+        "--enable-zero-copy"
       ];
     })
 
@@ -329,7 +341,7 @@
   # enviromental variable that chooses the vulkan driver.
   # uncomment to use the intel drivers, if needed replace "intel" with "nvidia" to use nvidia drivers 
   # comment this to use nvidia drivers
-  environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json;
+  # environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json;
   ## Note: use DRI_PRIME=1 <application> if you want to run vulkan applications on nvidia
 
   # for electron wayland 
