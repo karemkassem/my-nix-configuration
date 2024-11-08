@@ -376,8 +376,12 @@
           # Git integration
           gitsigns-nvim
           
-          # Theme
+          ## Themes
           tokyonight-nvim
+          catppuccin-nvim
+          onedark-nvim
+          vscode-nvim
+          gruvbox-material-nvim
           
           # Status line
           lualine-nvim
@@ -420,7 +424,7 @@
         vim.opt.termguicolors = true
 
         -- Theme
-        vim.cmd[[colorscheme tokyonight]]
+        vim.cmd[[colorscheme vscode]]
 
         -- Nvim Tree
         require('nvim-tree').setup{}
@@ -508,6 +512,44 @@
             { name = 'buffer' },
             { name = 'path' },
           })
+        })
+
+          -- Tab management keymaps
+        vim.keymap.set('n', '<leader>tn', ':tabnew<CR>', { noremap = true, desc = 'New tab' })
+        vim.keymap.set('n', '<leader>tc', ':tabclose<CR>', { noremap = true, desc = 'Close tab' })
+        vim.keymap.set('n', '<leader>to', ':tabonly<CR>', { noremap = true, desc = 'Close other tabs' })
+        
+        -- Tab navigation
+        vim.keymap.set('n', '<leader>1', '1gt', { noremap = true, desc = 'Go to tab 1' })
+        vim.keymap.set('n', '<leader>2', '2gt', { noremap = true, desc = 'Go to tab 2' })
+        vim.keymap.set('n', '<leader>3', '3gt', { noremap = true, desc = 'Go to tab 3' })
+        vim.keymap.set('n', '<leader>4', '4gt', { noremap = true, desc = 'Go to tab 4' })
+        vim.keymap.set('n', '<leader>5', '5gt', { noremap = true, desc = 'Go to tab 5' })
+        
+        -- Alternative tab navigation
+        vim.keymap.set('n', '<A-h>', ':tabprevious<CR>', { noremap = true, desc = 'Previous tab' })
+        vim.keymap.set('n', '<A-l>', ':tabnext<CR>', { noremap = true, desc = 'Next tab' })
+        
+        -- Buffer management (another way to manage multiple files)
+        vim.keymap.set('n', '<leader>bn', ':bnext<CR>', { noremap = true, desc = 'Next buffer' })
+        vim.keymap.set('n', '<leader>bp', ':bprevious<CR>', { noremap = true, desc = 'Previous buffer' })
+        vim.keymap.set('n', '<leader>bd', ':bdelete<CR>', { noremap = true, desc = 'Delete buffer' })
+
+        -- Configure bufferline
+        require('bufferline').setup({
+          options = {
+            mode = 'tabs',
+            separator_style = 'slant',
+            always_show_bufferline = true,
+            show_buffer_close_icons = true,
+            show_close_icon = true,
+            color_icons = true,
+            diagnostics = "nvim_lsp",
+            diagnostics_indicator = function(count, level)
+              local icon = level:match("error") and " " or " "
+              return " " .. icon .. count
+            end,
+          }
         })
 
         -- Treesitter
