@@ -261,12 +261,13 @@
     rofi-wayland
     dunst
     libnotify # for dunst
-    networkmanagerapplet
-    swww
     waybar
+    swww
     pwvucontrol
     cliphist
     wl-clipboard
+    brightnessctl
+    libsForQt5.kservice
 
     ## terminal applications
     kitty
@@ -289,6 +290,8 @@
     zoom-us
     kdePackages.filelight
     kdePackages.kclock
+    librewolf
+    vlc
 
     ## chromium browsers
     (chromium.override {
@@ -309,10 +312,20 @@
     ## coding
     gcc
     python3
-    virtualenv
     git
     vscode
     jetbrains.pycharm-professional
+    zed-editor
+
+    # language servers and packages for zed 
+    
+    tree-sitter-grammar.stree-sitter-c
+    tree-sitter-grammar.tree-sitter-markdown
+    tree-sitter-grammar.tree-sitter-python
+    tree-sitter-grammar.tree-sitter-java
+
+    clang-tools # for clangd in c
+
 
     ## neovim
 
