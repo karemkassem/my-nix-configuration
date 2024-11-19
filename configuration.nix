@@ -277,11 +277,6 @@
     bat
     ranger
     neofetch
-    
-    ## gnome applications
-    # gnome-tweaks
-    resources
-    mission-center
 
     ## applications 
     obsidian
@@ -292,6 +287,7 @@
     kdePackages.kclock
     librewolf
     vlc
+    resources
 
     ## chromium browsers
     (chromium.override {
@@ -319,15 +315,15 @@
 
     # language servers and packages for zed 
     
-    tree-sitter-grammar.stree-sitter-c
-    tree-sitter-grammar.tree-sitter-markdown
-    tree-sitter-grammar.tree-sitter-python
-    tree-sitter-grammar.tree-sitter-java
+    # tree-sitter-grammars.tree-sitter-c
+    # tree-sitter-grammars.tree-sitter-markdown
+    # tree-sitter-grammars.tree-sitter-python
+    # tree-sitter-grammars.tree-sitter-java
 
     clang-tools # for clangd in c
 
 
-    ## neovim
+    ## neovim and Zed
 
     # Language servers
     nodePackages.typescript-language-server
@@ -588,6 +584,12 @@
 
         -- Indent guides (new version)
         require('ibl').setup()
+        
+        -- swith navigation keys 
+        vim.keymap.set({'n', 'v'}, 'j', 'h')
+        vim.keymap.set({'n', 'v'}, 'k', 'k')
+        vim.keymap.set({'n', 'v'}, 'l', 'j')
+        vim.keymap.set({'n', 'v'}, ';', 'l')
 
         -- Which key
         require('which-key').setup()
