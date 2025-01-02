@@ -23,17 +23,18 @@
   # needed drivers for opengl and intel ( mainly for hardware acceleration on firefox )
   hardware.graphics = {
     enable = true;
+
     extraPackages = with pkgs;[  
       mesa
       intel-media-driver 
-      # intel-ocl 
+
       intel-vaapi-driver
       libvdpau-va-gl
-      # vaapi-intel-hybrid
-      # libva-vdpau-driver
+      intel-compute-runtime
+
     ]; 
   };
-  # environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
+  # services.frigate.vaapiDriver = "iHD"; # Force intel vaapi driver
 
   #  boot.blacklistedKernelModules = [ "nouveau" ];
   
@@ -76,20 +77,17 @@
     # choose one of the two options only
     # thers is another option c, but it's experimental, go to the wiki.
 		# Option A : offloading
-    # offload = {
-		# 	enable = true;
-		# 	enableOffloadCmd = true;
-		# };
+    offload = {
+			enable = true;
+			enableOffloadCmd = true;
+		};
     # Option B : sync
-    sync.enable = true;
+    # sync.enable = true;
 
 		# Make sure to use the correct Bus ID values for your system!
 		intelBusId = "PCI:0:2:0";
 		nvidiaBusId = "PCI:1:0:0";
 	};
-
-
-
   # end of nvidia drivers
 
   # enable and default zsh
@@ -134,7 +132,7 @@
   services = {
     xserver = {
       enable = true;
-      videoDrivers = [ "i915" "nouveau"]; # replace i915 with nvidia, for nvidia #"nvidia" "nvidia_drm" "nvidia_modeset" 
+      videoDrivers = [ "nvidia" ]; 
     };
     desktopManager.plasma6.enable = true;
     displayManager = {
@@ -163,24 +161,13 @@
   # '';
   # boot.blacklistedKernelModules = [ "nouveau" "nvidia" "nvidia_drm" "nvidia_modeset" ];
 
-  ## spcial boot configuration for nvidia drivers, ( can add more options and more configurations )
-  specialisation = {
-    nvidia.configuration = {
-      system.nixos.tags = [ "nvidia" ];
-      services.xserver.videoDrivers = [ "i915" "nvidia" "nvidia_drm" "nvidia_modeset" ];  
-    };
+  # spcial boot configuration for nvidia drivers, ( can add more options and more configurations )
+  # specialisation = {
+  #   nvidia.configuration = {
+  #     system.nixos.tags = [ "nvidia" ];
+  #     services.xserver.videoDrivers = [ "i915" "nvidia" "nvidia_drm" "nvidia_modeset" ];
+  #   };
 
-  };
-
-  # Enable the GNOME Desktop Environment.
-  # services.xserver.displayManager.gdm.enable = true;
-  # services.xserver.desktopManager.gnome.enable = true;
-
-  # Using the following example configuration, QT applications will have a look similar to the GNOME desktop, using a dark theme. 
-  # qt = {
-  #   enable = true;
-  #   platformTheme = "gnome";
-  #   style = "adwaita-dark";
   # };
 
   # Configure keymap in X11
@@ -235,7 +222,7 @@
   nixpkgs.config.allowUnfree = true;
 
   # to allow connections with ios
-  # services.usbmuxd.enable = true;
+  services.usbmuxd.enable = true;
 
   # # xdg portal configuration
   xdg.portal = {
@@ -244,6 +231,7 @@
       xdg-desktop-portal-hyprland
     ];
   };
+
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -254,12 +242,12 @@
     vulkan-tools
     vulkan-validation-layers
     mesa-demos
-    # libimobiledevice # to connect with ios
+    libimobiledevice # to connect with ios
 
     ## packages for hyprland
     lxqt.lxqt-policykit
     rofi-wayland
-    dunst
+    # dunst ## disabled it for kde notifications
     libnotify # for dunst
     waybar
     swww
@@ -285,25 +273,33 @@
     zoom-us
     kdePackages.filelight
     kdePackages.kclock
-    librewolf
     vlc
     resources
+    onlyoffice-desktopeditors
+    
+    ## games
+    protonup-qt
+    gamemode
 
     ## chromium browsers
-    (chromium.override {
-      commandLineArgs = [
-        "--enable-features=VaapiVideoDecodeLinuxGL"
-        "--ignore-gpu-blocklist"
-        "--enable-zero-copy"
-      ];
-    })
-    (brave.override {
-      commandLineArgs = [
-        "--enable-features=VaapiVideoDecodeLinuxGL"
-        "--ignore-gpu-blocklist"
-        "--enable-zero-copy"
-      ];
-    })
+    vivaldi-ffmpeg-codecs
+    (vivaldi.overrideAttrs
+      (oldAttrs: {
+        dontWrapQtApps = false;
+        dontPatchELF = true;
+        nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [
+          pkgs.kdePackages.wrapQtAppsHook
+          pkgs.makeWrapper
+        ];
+        postFixup = oldAttrs.postFixup or "" + ''
+          wrapProgram $out/bin/vivaldi \
+            --add-flags "--enable-features=VaapiVideoDecodeLinuxGL" \
+            --add-flags "--ignore-gpu-blocklist" \
+            --add-flags "--enable-zero-copy"
+        '';
+      }))
+
+
 
     ## coding
     gcc
@@ -339,6 +335,7 @@
     fd
 
   ];
+
 
   # NeoVim
   programs.neovim = {
@@ -586,10 +583,10 @@
         require('ibl').setup()
         
         -- swith navigation keys 
-        vim.keymap.set({'n', 'v'}, 'j', 'h')
-        vim.keymap.set({'n', 'v'}, 'k', 'k')
-        vim.keymap.set({'n', 'v'}, 'l', 'j')
-        vim.keymap.set({'n', 'v'}, ';', 'l')
+        -- vim.keymap.set({'n', 'v'}, 'j', 'h')
+        -- vim.keymap.set({'n', 'v'}, 'k', 'k')
+        -- vim.keymap.set({'n', 'v'}, 'l', 'j')
+        -- vim.keymap.set({'n', 'v'}, ';', 'l')
 
         -- Which key
         require('which-key').setup()
@@ -598,15 +595,13 @@
     };
   };
 
-  # Font configuration
+  # Font configuration for nvim and terminal
   fonts = {
     packages = with pkgs; [
-      (nerdfonts.override { fonts = [
-        "JetBrainsMono"
-        "FiraCode"
-        "Hack"
-        "DroidSansMono"
-      ]; })
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.fira-code
+      nerd-fonts.hack
+      nerd-fonts.droid-sans-mono
       dejavu_fonts
       liberation_ttf
       ubuntu_font_family
@@ -635,23 +630,40 @@
       { from = 1714; to = 1764; } # KDE Connect
     ];  
   }; 
-
+  
   # Enable and download steam (NOTE : make sure to change the vulkan driver to nvidia)
   programs.steam = {
     enable = true;
+    extraCompatPackages = [
+      pkgs.proton-ge-bin
+    ];
     remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
     localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+  };
+  # enable gamemode for steam
+  programs.gamemode = {
+    enable = true;
+  # Optional settings:
+  # settings = {
+  #   general = {
+  #     renice = 10;
+  #   };
+  # };
   };
   
   # enviromental variable that chooses the vulkan driver.
   # uncomment to use the intel drivers, if needed replace "intel" with "nvidia" to use nvidia drivers 
   # comment this to use nvidia drivers
-  # environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/intel_icd.x86_64.json;
+  environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json;
+ 
   ## Note: use DRI_PRIME=1 <application> if you want to run vulkan applications on nvidia
 
-  # for electron wayland 
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  # session variables
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";  # For Wayland support
+    LIBVA_DRIVER_NAME = "iHD";  # For Intel GPUs
+  };
 
   # enable flatpak
   services.flatpak.enable = true;
