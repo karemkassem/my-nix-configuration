@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -19,6 +19,9 @@
   hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
   services.blueman.enable = true;
   hardware.enableRedistributableFirmware = true; # this is to fix the bad mix of wifi and bluetooth
+  nix.settings.experimental-features = [ "nix-command" "flakes" ]; # enable nix flakes
+
+
 
   # needed drivers for opengl and intel ( mainly for hardware acceleration on firefox )
   hardware.graphics = {
@@ -69,7 +72,7 @@
     nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    package = config.boot.kernelPackages.nvidiaPackages.latest; # for the stable drivers : config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
   # laptop configuration
@@ -77,12 +80,12 @@
     # choose one of the two options only
     # thers is another option c, but it's experimental, go to the wiki.
 		# Option A : offloading
-    offload = {
-			enable = true;
-			enableOffloadCmd = true;
-		};
+    # offload = {
+		# 	enable = true;
+		# 	enableOffloadCmd = true;
+		# };
     # Option B : sync
-    # sync.enable = true;
+    sync.enable = true;
 
 		# Make sure to use the correct Bus ID values for your system!
 		intelBusId = "PCI:0:2:0";
@@ -96,7 +99,7 @@
 
   # sets the kernel to the latest kernel available 
   # comment it to use the "lts" version
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -169,6 +172,17 @@
   #   };
 
   # };
+  
+  specialisation = {
+    on-the-go.configuration = {
+      system.nixos.tags = [ "on-the-go" ];
+      hardware.nvidia = {
+        prime.offload.enable = lib.mkForce true;
+        prime.offload.enableOffloadCmd = lib.mkForce true;
+        prime.sync.enable = lib.mkForce false;
+      };
+    };
+  };
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -185,7 +199,7 @@
   # };
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false; # switch to it if a flatpak app is lagging
+  services.pulseaudio.enable = false; # switch to it if a flatpak app is lagging
   security.rtkit.enable = true; # this one is the default
   security.polkit.enable = true;
   services.pipewire = {
@@ -222,7 +236,7 @@
   nixpkgs.config.allowUnfree = true;
 
   # to allow connections with ios
-  services.usbmuxd.enable = true;
+  # services.usbmuxd.enable = true;
 
   # # xdg portal configuration
   xdg.portal = {
@@ -242,7 +256,7 @@
     vulkan-tools
     vulkan-validation-layers
     mesa-demos
-    libimobiledevice # to connect with ios
+    # libimobiledevice # to connect with ios
 
     ## packages for hyprland
     lxqt.lxqt-policykit
@@ -280,6 +294,8 @@
     ## games
     protonup-qt
     gamemode
+ 
+
 
     ## chromium browsers
     vivaldi-ffmpeg-codecs
@@ -652,17 +668,22 @@
   # };
   };
   
+
+
+
+  
+
   # enviromental variable that chooses the vulkan driver.
   # uncomment to use the intel drivers, if needed replace "intel" with "nvidia" to use nvidia drivers 
   # comment this to use nvidia drivers
-  environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json;
+  # environment.variables.VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json;
  
   ## Note: use DRI_PRIME=1 <application> if you want to run vulkan applications on nvidia
 
   # session variables
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";  # For Wayland support
-    LIBVA_DRIVER_NAME = "iHD";  # For Intel GPUs
+    # LIBVA_DRIVER_NAME = "iHD";  # For Intel GPUs
   };
 
   # enable flatpak
