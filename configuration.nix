@@ -16,7 +16,12 @@
 
 
   # sets the kernel to the latest kernel available
-#   boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelModules = [ "ntsync" ]; # enables ntsync
+  # Set proper permissions for /dev/ntsync
+  services.udev.extraRules = ''
+    KERNEL=="ntsync", MODE="0664", GROUP="users"
+  '';
 
   # enable bluetooth
   hardware.bluetooth.enable = true; # enables support for Bluetooth
@@ -55,17 +60,17 @@
 
   hardware.nvidia = {
 
-    package = config.boot.kernelPackages.nvidiaPackages.stable; # Options : [ stable, latest, beta ]
+    package = config.boot.kernelPackages.nvidiaPackages.latest; # Options : [ stable, latest, beta ]
 
     videoAcceleration = true;
 
     nvidiaSettings = true;
 
-    nvidiaPersistenced = true; # Might Improve HDMI connection when true
+    nvidiaPersistenced = false; # Might Improve HDMI connection when true
 
     modesetting.enable = true;
 
-    dynamicBoost.enable = true; # might improve performance
+    dynamicBoost.enable = false; # might improve performance
 
     open = true;
 
@@ -576,6 +581,6 @@
 
 
   
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = "25.05"; # Did you read the comment?
 
 }
